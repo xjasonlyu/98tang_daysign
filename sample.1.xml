@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root><![CDATA[<h3 class="flb"><em>提示信息</em><span><a href="javascript:;" class="flbc" onclick="hideWindow('pc_click_ddsign');" title="关闭">关闭</a></span></h3>
+<div class="c altw">
+<div class="alert_right"><script type="text/javascript" reload="1">if(typeof succeedhandle_pc_click_ddsign=='function') {succeedhandle_pc_click_ddsign('plugin.php?id=dd_sign&view=daysign', '签到成功，金钱+2，明天记得来哦。', {});}hideWindow('pc_click_ddsign');showDialog('签到成功，金钱+2，明天记得来哦。', 'right', null, function () { window.location.href ='plugin.php?id=dd_sign&view=daysign'; }, 0, null, null, null, null, null, 2);</script></div>
+</div>
+<p class="o pns">
+<span class="z xg1">2 秒后页面跳转</span>
+</p>
+]]></root>
