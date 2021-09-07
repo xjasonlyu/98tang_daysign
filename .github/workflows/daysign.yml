@@ -1,0 +1,28 @@
+name: 98tang Daysign
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 16 * * *'
+
+jobs:
+
+  daysign:
+    name: Daysign
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+
+      - env:
+          COOKIES: ${{ secrets.COOKIES_URL }}
+          COOKIES_URL: ${{ secrets.COOKIES_URL }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          pip3 install --upgrade requests && python3 daysign.py
