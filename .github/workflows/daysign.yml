@@ -20,7 +20,7 @@ jobs:
           architecture: 'x64'
 
       - env:
-          COOKIES: ${{ secrets.COOKIES_URL }}
+          COOKIES: ${{ secrets.COOKIES }}
           COOKIES_URL: ${{ secrets.COOKIES_URL }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
