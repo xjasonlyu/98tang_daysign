@@ -8,7 +8,7 @@
 
 ## How to retrieve cookies
 
-1. Go to `https://www.sehuatang.net/plugin.php?id=dd_sign&view=daysign`
+1. Go to [`https://www.sehuatang.net/plugin.php?id=dd_sign&view=daysign`](https://www.sehuatang.net/plugin.php?id=dd_sign&view=daysign)
 2. Press `F12` to open the developer console
 3. Locate the `Network` tab
 4. Right click the relevant request, and select `Copy as cURL`
