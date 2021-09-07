@@ -24,6 +24,7 @@ def daysign(cookies: dict) -> bool:
                           'referer': f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&view=daysign',
                           'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7'
                       }) as r:
+        r.raise_for_status()
         return r.text
 
 
@@ -34,6 +35,7 @@ def retrieve_cookies_from_env(env: str) -> dict:
 
 def retrieve_cookies_from_url(url: str) -> dict:
     with requests.get(url=url, allow_redirects=True) as r:
+        r.raise_for_status()
         return dict(i.strip().split('=', maxsplit=1) for i in r.text.split(';') if '=' in i)
 
 
@@ -44,6 +46,7 @@ def telegram_send_message(text: str, chat_id: str, token: str):
                           'text': text,
                           'parse_mode': 'Markdown',
                       }) as r:
+        r.raise_for_status()
         return r.json()
 
 
@@ -59,12 +62,14 @@ def main():
         elif '已经签到' in raw_html:
             message_text = re.findall(
                 r"'(已经签到.+?)'", raw_html, re.MULTILINE)[0]
+        elif '需要先登录' in raw_html:
+            message_text = f'*98堂 签到异常*\n\nCookie无效或已过期，请重新获取。'
         else:
             message_text = raw_html
     except IndexError:
-        message_text = f'# 98tang Daysign Error\nregex result is empty\n----------\n{raw_html}'
+        message_text = f'*98堂 签到异常*\n\n正则匹配错误\n--------------------\n{raw_html}'
     except Exception as e:
-        message_text = f'# 98tang Daysign Error\n{e}\n----------\n{raw_html}'
+        message_text = f'*98堂 签到异常*\n\n错误原因：{e}\n--------------------\n{raw_html}'
 
     # log to output
     print(message_text)
