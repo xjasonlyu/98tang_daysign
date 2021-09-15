@@ -39,12 +39,13 @@ def retrieve_cookies_from_url(url: str) -> dict:
         return dict(i.strip().split('=', maxsplit=1) for i in r.text.split(';') if '=' in i)
 
 
-def telegram_send_message(text: str, chat_id: str, token: str):
+def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False):
     with requests.get(url=f'https://api.telegram.org/bot{token}/sendMessage',
                       params={
                           'chat_id': chat_id,
                           'text': text,
                           'parse_mode': 'Markdown',
+                          'disable_notification': silent,
                       }) as r:
         r.raise_for_status()
         return r.json()
@@ -78,7 +79,8 @@ def main():
     chat_id = os.getenv('CHAT_ID')
     bot_token = os.getenv('BOT_TOKEN')
     if chat_id and bot_token:
-        telegram_send_message(message_text, chat_id, bot_token)
+        telegram_send_message(message_text, chat_id, bot_token, silent=(
+            True if '签到成功' in message_text else False))
 
 
 if __name__ == '__main__':
