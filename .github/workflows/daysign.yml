@@ -20,9 +20,8 @@ jobs:
           architecture: 'x64'
 
       - env:
-          COOKIES: ${{ secrets.COOKIES }}
-          COOKIES_URL: ${{ secrets.COOKIES_URL }}
+          CURL: ${{ secrets.CURL }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          pip3 install --upgrade requests && python3 daysign.py
+          pip3 install --upgrade requests uncurl && python3 daysign.py

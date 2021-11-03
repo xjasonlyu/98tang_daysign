@@ -1,5 +1,7 @@
 import os
 import re
+import json
+import uncurl
 import requests
 
 SEHUATANG_HOST = 'www.sehuatang.net'
@@ -28,32 +30,26 @@ def daysign(cookies: dict) -> bool:
         return r.text
 
 
-def retrieve_cookies_from_env(env: str) -> dict:
-    rawCookies = os.getenv(env, '')
-    return dict(i.strip().split('=', maxsplit=1) for i in rawCookies.split(';') if '=' in i)
-
-
-def retrieve_cookies_from_url(url: str) -> dict:
-    with requests.get(url=url, allow_redirects=True) as r:
-        r.raise_for_status()
-        return dict(i.strip().split('=', maxsplit=1) for i in r.text.split(';') if '=' in i)
+def retrieve_cookies_from_curl(env: str) -> dict:
+    cURL = os.getenv(env, '').replace('\\', '')
+    return uncurl.parse_context(curl_command=cURL).cookies
 
 
 def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False):
-    with requests.get(url=f'https://api.telegram.org/bot{token}/sendMessage',
-                      params={
-                          'chat_id': chat_id,
-                          'text': text,
-                          'parse_mode': 'Markdown',
-                          'disable_notification': silent,
-                      }) as r:
+    with requests.post(url=f'https://api.telegram.org/bot{token}/sendMessage',
+                       headers={'Content-Type': 'application/json'},
+                       data=json.dumps({
+                           'chat_id': chat_id,
+                           'text': text,
+                           'parse_mode': 'HTML',
+                           'disable_notification': silent,
+                       })) as r:
         r.raise_for_status()
         return r.json()
 
 
 def main():
-    cookies = retrieve_cookies_from_env('COOKIES') or \
-        retrieve_cookies_from_url(os.getenv('COOKIES_URL'))
+    cookies = retrieve_cookies_from_curl('CURL')
     raw_html = daysign(cookies=cookies)
 
     try:
@@ -64,13 +60,13 @@ def main():
             message_text = re.findall(
                 r"'(已经签到.+?)'", raw_html, re.MULTILINE)[0]
         elif '需要先登录' in raw_html:
-            message_text = f'*98堂 签到异常*\n\nCookie无效或已过期，请重新获取。'
+            message_text = f'<b>98堂 签到异常</b>\n\nCookie无效或已过期，请重新获取。'
         else:
             message_text = raw_html
     except IndexError:
-        message_text = f'*98堂 签到异常*\n\n正则匹配错误\n--------------------\n{raw_html}'
+        message_text = f'<b>98堂 签到异常</b>\n\n正则匹配错误\n--------------------\n{raw_html}'
     except Exception as e:
-        message_text = f'*98堂 签到异常*\n\n错误原因：{e}\n--------------------\n{raw_html}'
+        message_text = f'<b>98堂 签到异常</b>\n\n错误原因：{e}\n--------------------\n{raw_html}'
 
     # log to output
     print(message_text)
