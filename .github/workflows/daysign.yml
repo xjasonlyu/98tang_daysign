@@ -24,4 +24,4 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          pip3 install --upgrade requests uncurl && python3 daysign.py
+          pip3 install --upgrade requests uncurl bs4 && python3 daysign.py

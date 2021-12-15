@@ -1,33 +1,64 @@
 import os
 import re
 import json
+import random
 import uncurl
 import requests
+from bs4 import BeautifulSoup
 
 SEHUATANG_HOST = 'www.sehuatang.net'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36'
 
 
 def daysign(cookies: dict) -> bool:
-    with requests.get(url=f'https://{SEHUATANG_HOST}/plugin.php',
-                      cookies=cookies,
-                      params={'id': 'dd_sign', 'mod': 'sign', 'infloat': 'yes', 'handlekey': 'pc_click_ddsign',
-                              'inajax': '1', 'ajaxtarget': 'fwin_content_pc_click_ddsign',
-                              },
-                      headers={
-                          'user-agent': DEFAULT_USER_AGENT,
-                          'x-requested-with': 'XMLHttpRequest',
-                          'accept': '*/*',
-                          'sec-ch-ua-mobile': '?0',
-                          'sec-ch-ua-platform': 'macOS',
-                          'sec-fetch-site': 'same-origin',
-                          'sec-fetch-mode': 'cors',
-                          'sec-fetch-dest': 'empty',
-                          'referer': f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&view=daysign',
-                          'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7'
-                      }) as r:
-        r.raise_for_status()
-        return r.text
+
+    with requests.Session() as session:
+
+        def _request(method, url, *args, **kwargs):
+            with session.request(method=method, url=url, cookies=cookies,
+                                 headers={
+                                     'user-agent': DEFAULT_USER_AGENT,
+                                     'x-requested-with': 'XMLHttpRequest',
+                                     'accept': '*/*',
+                                     'sec-ch-ua-mobile': '?0',
+                                     'sec-ch-ua-platform': 'macOS',
+                                     'sec-fetch-site': 'same-origin',
+                                     'sec-fetch-mode': 'cors',
+                                     'sec-fetch-dest': 'empty',
+                                     'referer': f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign',
+                                     'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+                                 }, *args, **kwargs) as r:
+                r.raise_for_status()
+                return r
+
+        with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign') as r:
+            id_hash_rsl = re.findall(
+                r"updatesecqaa\('(.*?)'", r.text, re.MULTILINE | re.IGNORECASE)
+            id_hash = id_hash_rsl[0] if id_hash_rsl else 'qS0'  # default value
+
+            soup = BeautifulSoup(r.text, 'html.parser')
+            formhash = soup.find('input', {'name': 'formhash'})['value']
+            signtoken = soup.find('input', {'name': 'signtoken'})['value']
+            action = soup.find('form', {'name': 'login'})['action']
+
+        # GET: https://www.sehuatang.net/misc.php?mod=secqaa&action=update&idhash=qS0&0.2010053552105764
+        with _request(method='get', url=f'https://{SEHUATANG_HOST}/misc.php?mod=secqaa&action=update&idhash={id_hash}&{round(random.random(), 16)}') as r:
+            qes_rsl = re.findall(r"'(.*?) = \?'", r.text,
+                                 re.MULTILINE | re.IGNORECASE)
+
+            if not qes_rsl or not qes_rsl[0]:
+                raise Exception('invalid or empty question!')
+            qes = qes_rsl[0]
+            ans = eval(qes)
+            assert type(ans) == int
+
+        # POST: https://www.sehuatang.net/plugin.php?id=dd_sign&mod=sign&signsubmit=yes&signhash=LMAB9&inajax=1
+        with _request(method='post', url=f'https://{SEHUATANG_HOST}/{action.lstrip("/")}&inajax=1',
+                      data={'formhash': formhash,
+                            'signtoken': signtoken,
+                            'secqaahash': id_hash,
+                            'secanswer': ans}) as r:
+            return r.text
 
 
 def retrieve_cookies_from_curl(env: str) -> dict:
