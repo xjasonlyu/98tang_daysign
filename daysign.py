@@ -80,10 +80,10 @@ def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = Fa
 
 
 def main():
-    cookies = retrieve_cookies_from_curl('CURL')
-    raw_html = daysign(cookies=cookies)
-
     try:
+        cookies = retrieve_cookies_from_curl('CURL')
+        raw_html = daysign(cookies=cookies)
+
         if '签到成功' in raw_html:
             message_text = re.findall(
                 r"'(签到成功.+?)'", raw_html, re.MULTILINE)[0]
