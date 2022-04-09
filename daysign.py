@@ -80,6 +80,9 @@ def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = Fa
 
 
 def main():
+
+    raw_html = None
+
     try:
         cookies = retrieve_cookies_from_curl('CURL')
         raw_html = daysign(cookies=cookies)
