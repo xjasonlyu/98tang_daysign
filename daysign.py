@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 
 SEHUATANG_HOST = 'www.sehuatang.net'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'
 
 
 def daysign(cookies: dict) -> bool:
@@ -19,6 +19,7 @@ def daysign(cookies: dict) -> bool:
                                  headers={
                                      'user-agent': DEFAULT_USER_AGENT,
                                      'x-requested-with': 'XMLHttpRequest',
+                                     'dnt': '1',
                                      'accept': '*/*',
                                      'sec-ch-ua-mobile': '?0',
                                      'sec-ch-ua-platform': 'macOS',
