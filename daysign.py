@@ -67,6 +67,18 @@ def retrieve_cookies_from_curl(env: str) -> dict:
     return uncurl.parse_context(curl_command=cURL).cookies
 
 
+def retrieve_cookies_from_fetch(env: str) -> dict:
+    def parse_fetch(s: str) -> dict:
+        ans = {}
+        exec(s, {
+            'fetch': lambda _, o: ans.update(o),
+            'null': None
+        })
+        return ans
+    cookie_str = parse_fetch(os.getenv(env))['headers']['cookie']
+    return dict(s.strip().split('=', maxsplit=1) for s in cookie_str.split(';'))
+
+
 def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False):
     with requests.post(url=f'https://api.telegram.org/bot{token}/sendMessage',
                        headers={'Content-Type': 'application/json'},
@@ -83,9 +95,14 @@ def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = Fa
 def main():
 
     raw_html = None
+    cookies = {}
+
+    if os.getenv('CURL'):
+        cookies = retrieve_cookies_from_curl('CURL')
+    elif os.getenv('FETCH'):
+        cookies = retrieve_cookies_from_fetch('FETCH')
 
     try:
-        cookies = retrieve_cookies_from_curl('CURL')
         raw_html = daysign(cookies=cookies)
 
         if '签到成功' in raw_html:
