@@ -1,5 +1,7 @@
 # 98tang Daysign Script
 
+Notice: Actions is unable to sign 98tang since its IP was filtered by Cloudflare. Try to run locally.
+
 ## How to use in [Qinglong](https://github.com/whyour/qinglong) (Recommended)
 
 1. Export cookies from Browser
