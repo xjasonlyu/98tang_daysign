@@ -24,10 +24,10 @@ Notice: Actions is unable to sign 98tang since its IP was filtered by Cloudflare
 
 ## Environment variables
 
-1. `CURL` or `CURL_98TANG`: cURL command string (e.g. `curl -H 'xxx:xxx'`)
-2. `FETCH` or `FETCH_98TANG`: Node.js fetch string (e.g. `fetch("xxx", ...)`)
-3. `CHAT_ID`(optional): @BotFather bot chat ID
-4. `BOT_TOKEN`(optional): @BotFather bot token
+1. `CURL_98TANG`: cURL command string (e.g. `curl -H 'xxx:xxx'`)
+2. `FETCH_98TANG`: Node.js fetch string (e.g. `fetch("xxx", ...)`)
+3. `TG_USER_ID`(optional): @BotFather bot chat ID
+4. `TG_BOT_TOKEN`(optional): @BotFather bot token
 
 ## Telegram notification
 

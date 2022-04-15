@@ -101,10 +101,6 @@ def main():
         cookies = retrieve_cookies_from_curl('CURL_98TANG')
     elif os.getenv('FETCH_98TANG'):
         cookies = retrieve_cookies_from_fetch('FETCH_98TANG')
-    elif os.getenv('CURL'):
-        cookies = retrieve_cookies_from_curl('CURL')
-    elif os.getenv('FETCH'):
-        cookies = retrieve_cookies_from_fetch('FETCH')
 
     try:
         raw_html = daysign(cookies=cookies)
@@ -128,8 +124,8 @@ def main():
     print(message_text)
 
     # telegram notify
-    chat_id = os.getenv('CHAT_ID')
-    bot_token = os.getenv('BOT_TOKEN')
+    chat_id = os.getenv('TG_USER_ID')
+    bot_token = os.getenv('TG_BOT_TOKEN')
     if chat_id and bot_token:
         telegram_send_message(message_text, chat_id, bot_token, silent=(
             True if '签到成功' in message_text else False))
