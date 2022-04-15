@@ -22,11 +22,12 @@ Notice: Actions is unable to sign 98tang since its IP was filtered by Cloudflare
 3. Locate the `Network` tab
 4. Right click the relevant request, and select `Copy as cURL` or `Copy as Node.js fetch`
 
-## GitHub Actions Secrets
+## Environment variables
 
-1. `CURL`: cURL command string (e.g. `curl -H 'xxx:xxx'`)
-2. `CHAT_ID`(optional): @BotFather bot chat ID
-3. `BOT_TOKEN`(optional): @BotFather bot token
+1. `CURL` or `CURL_98TANG`: cURL command string (e.g. `curl -H 'xxx:xxx'`)
+2. `FETCH` or `FETCH_98TANG`: Node.js fetch string (e.g. `fetch("xxx", ...)`)
+3. `CHAT_ID`(optional): @BotFather bot chat ID
+4. `BOT_TOKEN`(optional): @BotFather bot token
 
 ## Telegram notification
 
