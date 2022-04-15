@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import random
 import uncurl
 import requests
@@ -81,13 +80,12 @@ def retrieve_cookies_from_fetch(env: str) -> dict:
 
 def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False):
     with requests.post(url=f'https://api.telegram.org/bot{token}/sendMessage',
-                       headers={'Content-Type': 'application/json'},
-                       data=json.dumps({
+                       json={
                            'chat_id': chat_id,
                            'text': text,
                            'parse_mode': 'HTML',
                            'disable_notification': silent,
-                       })) as r:
+                       }) as r:
         r.raise_for_status()
         return r.json()
 
