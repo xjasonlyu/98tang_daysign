@@ -63,7 +63,7 @@ def daysign(cookies: dict) -> bool:
 
 
 def retrieve_cookies_from_curl(env: str) -> dict:
-    cURL = os.getenv(env, '').replace('\\', '')
+    cURL = os.getenv(env, '').replace('\\', ' ')
     return uncurl.parse_context(curl_command=cURL).cookies
 
 
