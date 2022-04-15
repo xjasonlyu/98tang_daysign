@@ -97,7 +97,11 @@ def main():
     raw_html = None
     cookies = {}
 
-    if os.getenv('CURL'):
+    if os.getenv('CURL_98TANG'):
+        cookies = retrieve_cookies_from_curl('CURL_98TANG')
+    elif os.getenv('FETCH_98TANG'):
+        cookies = retrieve_cookies_from_fetch('FETCH_98TANG')
+    elif os.getenv('CURL'):
         cookies = retrieve_cookies_from_curl('CURL')
     elif os.getenv('FETCH'):
         cookies = retrieve_cookies_from_fetch('FETCH')
