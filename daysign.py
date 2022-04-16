@@ -78,16 +78,26 @@ def retrieve_cookies_from_fetch(env: str) -> dict:
     return dict(s.strip().split('=', maxsplit=1) for s in cookie_str.split(';'))
 
 
-def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False):
-    with requests.post(url=f'https://api.telegram.org/bot{token}/sendMessage',
-                       json={
-                           'chat_id': chat_id,
-                           'text': text,
-                           'parse_mode': 'HTML',
-                           'disable_notification': silent,
-                       }) as r:
-        r.raise_for_status()
-        return r.json()
+def push_notification(title: str, content: str) -> None:
+
+    def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False) -> None:
+        with requests.post(url=f'https://api.telegram.org/bot{token}/sendMessage',
+                           json={
+                               'chat_id': chat_id,
+                               'text': text,
+                               'disable_notification': silent,
+                               'disable_web_page_preview': True,
+                           }) as r:
+            r.raise_for_status()
+
+    try:
+        from notify import telegram_bot
+        telegram_bot(title, content)
+    except ImportError:
+        chat_id = os.getenv('TG_USER_ID')
+        bot_token = os.getenv('TG_BOT_TOKEN')
+        if chat_id and bot_token:
+            telegram_send_message(f'{title}\n\n{content}', chat_id, bot_token)
 
 
 def main():
@@ -104,29 +114,25 @@ def main():
         raw_html = daysign(cookies=cookies)
 
         if '签到成功' in raw_html:
-            message_text = re.findall(
+            title, message_text = '98堂 每日签到', re.findall(
                 r"'(签到成功.+?)'", raw_html, re.MULTILINE)[0]
         elif '已经签到' in raw_html:
-            message_text = re.findall(
+            title, message_text = '98堂 每日签到', re.findall(
                 r"'(已经签到.+?)'", raw_html, re.MULTILINE)[0]
         elif '需要先登录' in raw_html:
-            message_text = f'<b>98堂 签到异常</b>\n\nCookie无效或已过期，请重新获取。'
+            title, message_text = '98堂 签到异常', f'Cookie无效或已过期，请重新获取'
         else:
-            message_text = raw_html
+            title, message_text = '98堂 签到异常', raw_html
     except IndexError:
-        message_text = f'<b>98堂 签到异常</b>\n\n正则匹配错误\n--------------------\n{raw_html}'
+        title, message_text = '98堂 签到异常', f'正则匹配错误'
     except Exception as e:
-        message_text = f'<b>98堂 签到异常</b>\n\n错误原因：{e}\n--------------------\n{raw_html}'
+        title, message_text = '98堂 签到异常', f'错误原因：{e}'
 
     # log to output
     print(message_text)
 
     # telegram notify
-    chat_id = os.getenv('TG_USER_ID')
-    bot_token = os.getenv('TG_BOT_TOKEN')
-    if chat_id and bot_token:
-        telegram_send_message(message_text, chat_id, bot_token, silent=(
-            True if '签到成功' in message_text else False))
+    push_notification(title, message_text)
 
 
 if __name__ == '__main__':
