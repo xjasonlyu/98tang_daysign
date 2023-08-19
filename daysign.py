@@ -1,11 +1,37 @@
 import os
 import re
+import time
 import random
 import requests
 from bs4 import BeautifulSoup
 
 SEHUATANG_HOST = 'www.sehuatang.net'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+
+FID = 103  # 高清中文字幕
+
+AUTO_REPLIES = (
+    '感谢楼主分享好片',
+    '感谢分享！！',
+    '必需支持',
+    '简直太爽了',
+    '感谢分享啊',
+    '封面还不错',
+    '封面还不错，支持一波',
+    '這怎麼受的了啊',
+    '谁也挡不住！',
+    '感謝分享',
+    '分享支持。',
+    '这谁顶得住啊',
+    '这是要精尽人亡啊！',
+    '饰演很赞',
+    '這系列真有戲',
+    '感谢大佬分享',
+    '看着不错',
+    '感谢老板分享',
+    '可以看看',
+    '谢谢分享！！！',
+)
 
 
 def daysign(cookies: dict) -> bool:
@@ -29,6 +55,29 @@ def daysign(cookies: dict) -> bool:
                                  }, *args, **kwargs) as r:
                 r.raise_for_status()
                 return r
+
+        with _request(method='get', url=f'https://{SEHUATANG_HOST}/forum.php?mod=forumdisplay&fid={FID}') as r:
+            tids = re.findall(r"normalthread_(\d+)", r.text,
+                              re.MULTILINE | re.IGNORECASE)
+            tid = random.choice(tids)
+
+        with _request(method='get', url=f'https://{SEHUATANG_HOST}/forum.php?mod=viewthread&tid={tid}&extra=page%3D1') as r:
+            soup = BeautifulSoup(r.text, 'html.parser')
+            formhash = soup.find('input', {'name': 'formhash'})['value']
+
+        message = random.choice(AUTO_REPLIES)
+        print(f'comment to: tid = {tid}, message = {message}')
+
+        with _request(method='post', url=f'https://{SEHUATANG_HOST}/forum.php?mod=post&action=reply&fid={FID}&tid={tid}&extra=page%3D1&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1',
+                      data={
+                          'file': '',
+                          'message': message,
+                          'posttime': int(time.time()),
+                          'formhash': formhash,
+                          'usesig': '',
+                          'subject': '',
+                      }) as r:
+            r.raise_for_status()
 
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign') as r:
             id_hash_rsl = re.findall(
@@ -110,7 +159,7 @@ def main():
 
     if os.getenv('FETCH_98TANG'):
         cookies = retrieve_cookies_from_fetch('FETCH_98TANG')
-    if os.getenv('CURL_98TANG'):
+    elif os.getenv('CURL_98TANG'):
         cookies = retrieve_cookies_from_curl('CURL_98TANG')
 
     try:
