@@ -1,12 +1,11 @@
 import os
 import re
 import random
-import uncurl
 import requests
 from bs4 import BeautifulSoup
 
 SEHUATANG_HOST = 'www.sehuatang.net'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
 
 
 def daysign(cookies: dict) -> bool:
@@ -63,7 +62,11 @@ def daysign(cookies: dict) -> bool:
 
 def retrieve_cookies_from_curl(env: str) -> dict:
     cURL = os.getenv(env, '').replace('\\', ' ')
-    return uncurl.parse_context(curl_command=cURL).cookies
+    try:
+        import uncurl
+        return uncurl.parse_context(curl_command=cURL).cookies
+    except ImportError:
+        print("uncurl is required.")
 
 
 def retrieve_cookies_from_fetch(env: str) -> dict:
@@ -105,10 +108,10 @@ def main():
     raw_html = None
     cookies = {}
 
+    if os.getenv('FETCH_98TANG'):
+        cookies = retrieve_cookies_from_fetch('FETCH_98TANG')
     if os.getenv('CURL_98TANG'):
         cookies = retrieve_cookies_from_curl('CURL_98TANG')
-    elif os.getenv('FETCH_98TANG'):
-        cookies = retrieve_cookies_from_fetch('FETCH_98TANG')
 
     try:
         raw_html = daysign(cookies=cookies)
