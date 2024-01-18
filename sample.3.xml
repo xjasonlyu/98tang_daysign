@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root><![CDATA[<div id="main_messaqge_LwcIn">
+    <h3 class="flb">
+        <em id="returnmessage_LwcIn">每日签到</em>
+        <span><a href="javascript:;" class="flbc" onclick="hideWindow('pc_click_ddsign', 0, 1);" title="关闭">关闭</a></span>
+    </h3>
+    <form method="post" autocomplete="off" name="login" id="signform_LwcIn" class="cl" onsubmit="ajaxpost('signform_LwcIn', 'returnmessage_LwcIn', 'returnmessage_LwcIn', 'onerror');return false;" action="/plugin.php?id=dd_sign&amp;ac=sign&amp;signsubmit=yes&amp;handlekey=pc_click_ddsign&amp;signhash=LwcIn">
+        <input type="hidden" name="formhash" value="08faf638" />
+        <input type="hidden" name="signtoken" value="" />
+                        <span id="secqaa_qSAZcI0"></span>		
+<script type="text/javascript" reload="1">updatesecqaa('qSAZcI0', '<div class="rfm"><table><tr><th><sec>: </th><td><sec><br /><sec></td></tr></table></div>', 'plugin::dd_sign');</script>
+                <div class="rfm mbw bw0">
+            <table width="100%">
+                <tr>
+                    <th>&nbsp;</th>
+                    <td>
+                        <button class="pn pnc" type="submit" name="signsubmit" value="true" tabindex="1"><strong>签到</strong></button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </form>
+</div>]]></root>

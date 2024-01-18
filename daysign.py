@@ -95,8 +95,13 @@ def daysign(cookies: dict) -> bool:
 
             soup = BeautifulSoup(r.text, 'html.parser')
             formhash = soup.find('input', {'name': 'formhash'})['value']
-            signtoken = soup.find('input', {'name': 'signtoken'})['value']
-            action = soup.find('form', {'name': 'login'})['action']
+            # signtoken = soup.find('input', {'name': 'signtoken'})['value']
+            # action = soup.find('form', {'name': 'login'})['action']
+
+        with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&ac=sign&infloat=yes&handlekey=pc_click_ddsign&inajax=1&ajaxtarget=fwin_content_pc_click_ddsign') as r:
+            soup = BeautifulSoup(r.text, 'xml')
+            root = BeautifulSoup(soup.find('root').string, 'html.parser')
+            action = root.find('form', {'name': 'login'})['action']
 
         # GET: https://www.sehuatang.net/misc.php?mod=secqaa&action=update&idhash=qS0&0.2010053552105764
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/misc.php?mod=secqaa&action=update&idhash={id_hash}&{round(random.random(), 16)}') as r:
@@ -112,7 +117,7 @@ def daysign(cookies: dict) -> bool:
         # POST: https://www.sehuatang.net/plugin.php?id=dd_sign&mod=sign&signsubmit=yes&signhash=LMAB9&inajax=1
         with _request(method='post', url=f'https://{SEHUATANG_HOST}/{action.lstrip("/")}&inajax=1',
                       data={'formhash': formhash,
-                            'signtoken': signtoken,
+                            'signtoken': '',
                             'secqaahash': id_hash,
                             'secanswer': ans}) as r:
             return r.text
