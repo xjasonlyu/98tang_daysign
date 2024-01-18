@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import traceback
 import random
 import requests
 from bs4 import BeautifulSoup
@@ -187,6 +188,8 @@ def main():
         title, message_text = '98堂 签到异常', f'正则匹配错误'
     except Exception as e:
         title, message_text = '98堂 签到异常', f'错误原因：{e}'
+        # log detailed error message
+        traceback.print_exc()
 
     # log to output
     print(message_text)
