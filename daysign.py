@@ -4,6 +4,7 @@ import time
 import traceback
 import random
 import requests
+import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 from flaresolverr import FlareSolverrSession
 
@@ -168,6 +169,21 @@ def retrieve_cookies_from_fetch(env: str) -> dict:
     return dict(s.strip().split('=', maxsplit=1) for s in cookie_str.split(';'))
 
 
+def preprocess_text(text) -> str:
+    if 'xml' not in text:
+        return text
+
+    try:
+        root = ET.fromstring(text)
+        cdata = root.text
+        soup = BeautifulSoup(cdata, 'html.parser')
+        for script in soup.find_all('script'):
+            script.decompose()
+        return soup.get_text()
+    except:
+        return text
+
+
 def push_notification(title: str, content: str) -> None:
 
     def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False) -> None:
@@ -223,6 +239,9 @@ def main():
         title, message_text = '98堂 签到异常', f'错误原因：{e}'
         # log detailed error message
         traceback.print_exc()
+
+    # process message data
+    message_text = preprocess_text(message_text)
 
     # log to output
     print(message_text)
