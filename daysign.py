@@ -5,6 +5,7 @@ import traceback
 import random
 import requests
 from bs4 import BeautifulSoup
+from flaresolverr import FlareSolverrSession
 
 SEHUATANG_HOST = 'www.sehuatang.net'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
@@ -45,9 +46,14 @@ AUTO_REPLIES = (
 )
 
 
-def daysign(cookies: dict) -> bool:
+def daysign(
+    cookies: dict,
+    flaresolverr_url: str = None,
+    flaresolverr_proxy: str = None,
+) -> bool:
 
-    with requests.Session() as session:
+    with (FlareSolverrSession(url=flaresolverr_url, proxy=flaresolverr_proxy)
+          if flaresolverr_url else requests.Session()) as session:
 
         def _request(method, url, *args, **kwargs):
             with session.request(method=method, url=url, cookies=cookies,
@@ -195,7 +201,11 @@ def main():
         cookies = retrieve_cookies_from_curl('CURL_98TANG')
 
     try:
-        raw_html = daysign(cookies=cookies)
+        raw_html = daysign(
+            cookies=cookies,
+            flaresolverr_url=os.getenv('FLARESOLVERR_URL'),
+            flaresolverr_proxy=os.getenv('FLARESOLVERR_PROXY'),
+        )
 
         if '签到成功' in raw_html:
             title, message_text = '98堂 每日签到', re.findall(

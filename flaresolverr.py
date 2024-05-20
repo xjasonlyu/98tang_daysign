@@ -193,4 +193,4 @@ class FlareSolverrSession:
             retries -= 1
 
         raise FlareSolverrError(
-            f'CF challenge bypass failed with url: {url}')
+            f'CF challenge bypass error with url: {url}')
