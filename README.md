@@ -28,6 +28,7 @@ Notice: Actions is unable to sign 98tang since its IP was filtered by Cloudflare
 2. `FETCH_98TANG`: Node.js fetch string (e.g. `fetch("xxx", ...)`)
 3. `TG_USER_ID`(optional): @BotFather bot chat ID
 4. `TG_BOT_TOKEN`(optional): @BotFather bot token
+5. `FLARESOLVERR_URL` and `FLARESOLVERR_URL` (optional): For CloudFlare WAF bypass, see [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) for more details
 
 ## Telegram notification
 
