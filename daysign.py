@@ -65,6 +65,21 @@ def daysign(cookies: dict) -> bool:
                 r.raise_for_status()
                 return r
 
+        age_confirmed = False
+        age_retry_cnt = 3
+        while not age_confirmed and age_retry_cnt > 0:
+            with _request(method='get', url=f'https://{SEHUATANG_HOST}/') as r:
+                if (v := re.findall(r"safeid='(\w+)'", 
+                                    r.text, re.MULTILINE | re.IGNORECASE)) and (safeid := v[0]):
+                    print(f'set age confirm cookie: _safe={safeid}')
+                    cookies.update({'_safe': safeid})
+                else:
+                    age_confirmed = True
+                age_retry_cnt -= 1
+
+        if not age_confirmed:
+            raise Exception('failed to pass age confirmation')
+
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/forum.php?mod=forumdisplay&fid={FID}') as r:
             tids = re.findall(r"normalthread_(\d+)", r.text,
                               re.MULTILINE | re.IGNORECASE)
@@ -112,6 +127,7 @@ def daysign(cookies: dict) -> bool:
                 raise Exception('invalid or empty question!')
             qes = qes_rsl[0]
             ans = eval(qes)
+            print(f'verification question: {qes} = {ans}')
             assert type(ans) == int
 
         # POST: https://www.sehuatang.net/plugin.php?id=dd_sign&mod=sign&signsubmit=yes&signhash=LMAB9&inajax=1
