@@ -71,7 +71,7 @@ def daysign(cookies: dict) -> bool:
         age_retry_cnt = 3
         while not age_confirmed and age_retry_cnt > 0:
             with _request(method='get', url=f'https://{SEHUATANG_HOST}/') as r:
-                if (v := re.findall(r"safeid='(\w+)'", 
+                if (v := re.findall(r"safeid='(\w+)'",
                                     r.text, re.MULTILINE | re.IGNORECASE)) and (safeid := v[0]):
                     print(f'set age confirm cookie: _safe={safeid}')
                     cookies.update({'_safe': safeid})
