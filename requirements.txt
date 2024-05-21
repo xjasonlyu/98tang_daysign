@@ -1,4 +1,4 @@
-beautifulsoup4
 lxml
-requests
 uncurl
+httpx[http2]
+beautifulsoup4

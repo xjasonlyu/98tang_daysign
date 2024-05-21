@@ -7,7 +7,7 @@ import random
 from contextlib import contextmanager
 from bs4 import BeautifulSoup
 from xml.etree import ElementTree as ET
-# from flaresolverr import FlareSolverrSession
+from flaresolverr import FlareSolverrHTTPClient
 
 SEHUATANG_HOST = 'www.sehuatang.net'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
@@ -54,7 +54,11 @@ def daysign(
     flaresolverr_proxy: str = None,
 ) -> bool:
 
-    with (httpx.Client(cookies=cookies, http2=True)) as client:
+    with (FlareSolverrHTTPClient(url=flaresolverr_url,
+                                 proxy=flaresolverr_proxy,
+                                 cookies=cookies,
+                                 http2=True)
+          if flaresolverr_url else httpx.Client(cookies=cookies, http2=True)) as client:
 
         @contextmanager
         def _request(method, url, *args, **kwargs):
