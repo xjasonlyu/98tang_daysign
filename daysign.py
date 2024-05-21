@@ -1,12 +1,13 @@
 import os
 import re
 import time
+import httpx
 import traceback
 import random
-import requests
-import xml.etree.ElementTree as ET
+from contextlib import contextmanager
 from bs4 import BeautifulSoup
-from flaresolverr import FlareSolverrSession
+from xml.etree import ElementTree as ET
+# from flaresolverr import FlareSolverrSession
 
 SEHUATANG_HOST = 'www.sehuatang.net'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
@@ -53,26 +54,29 @@ def daysign(
     flaresolverr_proxy: str = None,
 ) -> bool:
 
-    with (FlareSolverrSession(url=flaresolverr_url, proxy=flaresolverr_proxy)
-          if flaresolverr_url else requests.Session()) as session:
+    with (httpx.Client(cookies=cookies, http2=True)) as client:
 
+        @contextmanager
         def _request(method, url, *args, **kwargs):
-            with session.request(method=method, url=url, cookies=cookies,
-                                 headers={
-                                     'user-agent': DEFAULT_USER_AGENT,
-                                     'x-requested-with': 'XMLHttpRequest',
-                                     'dnt': '1',
-                                     'accept': '*/*',
-                                     'sec-ch-ua-mobile': '?0',
-                                     'sec-ch-ua-platform': 'macOS',
-                                     'sec-fetch-site': 'same-origin',
-                                     'sec-fetch-mode': 'cors',
-                                     'sec-fetch-dest': 'empty',
-                                     'referer': f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign',
-                                     'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-                                 }, *args, **kwargs) as r:
+            r = client.request(method=method, url=url,
+                               headers={
+                                   'user-agent': DEFAULT_USER_AGENT,
+                                   'x-requested-with': 'XMLHttpRequest',
+                                   'dnt': '1',
+                                   'accept': '*/*',
+                                   'sec-ch-ua-mobile': '?0',
+                                   'sec-ch-ua-platform': 'macOS',
+                                   'sec-fetch-site': 'same-origin',
+                                   'sec-fetch-mode': 'cors',
+                                   'sec-fetch-dest': 'empty',
+                                   'referer': f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign',
+                                   'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+                               }, *args, **kwargs)
+            try:
                 r.raise_for_status()
-                return r
+                yield r
+            finally:
+                r.close()
 
         age_confirmed = False
         age_retry_cnt = 3
@@ -81,7 +85,7 @@ def daysign(
                 if (v := re.findall(r"safeid='(\w+)'",
                                     r.text, re.MULTILINE | re.IGNORECASE)) and (safeid := v[0]):
                     print(f'set age confirm cookie: _safe={safeid}')
-                    cookies.update({'_safe': safeid})
+                    client.cookies.set(name='_safe', value=safeid)
                 else:
                     age_confirmed = True
                 age_retry_cnt -= 1
@@ -93,13 +97,13 @@ def daysign(
             tids = re.findall(r"normalthread_(\d+)", r.text,
                               re.MULTILINE | re.IGNORECASE)
             tid = random.choice(tids)
+            print(f'choose tid = {tid} to comment')
 
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/forum.php?mod=viewthread&tid={tid}&extra=page%3D1') as r:
             soup = BeautifulSoup(r.text, 'html.parser')
             formhash = soup.find('input', {'name': 'formhash'})['value']
 
         message = random.choice(AUTO_REPLIES)
-        print(f'comment to: tid = {tid}, message = {message}')
 
         with _request(method='post', url=f'https://{SEHUATANG_HOST}/forum.php?mod=post&action=reply&fid={FID}&tid={tid}&extra=page%3D1&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1',
                       data={
@@ -110,7 +114,7 @@ def daysign(
                           'usesig': '',
                           'subject': '',
                       }) as r:
-            r.raise_for_status()
+            print(f'comment to: tid = {tid}, message = {message}')
 
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign') as r:
             id_hash_rsl = re.findall(
