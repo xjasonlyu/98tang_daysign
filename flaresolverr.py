@@ -104,6 +104,8 @@ class FlareSolverr:
 
 class FlareSolverrHTTPClient:
 
+    HTTPX_USER_AGENT = httpx._client.USER_AGENT
+
     def __init__(
         self,
         url: str,
@@ -132,16 +134,17 @@ class FlareSolverrHTTPClient:
         return self.http_client.cookies
 
     @staticmethod
-    def preprocess_headers(headers: dict) -> httpx.Headers:
-        headers = httpx.Headers(headers=headers)
-        headers.pop('User-Agent', None)
-        return headers
-
-    @staticmethod
     def require_challenge(r: httpx.Response) -> bool:
         return r.status_code == http.HTTPStatus.FORBIDDEN \
             and (r.text.find('Just a moment...') > 0 or
                  r.headers.get('CF-Mitigated') == 'challenge')
+
+    def preprocess_headers(self, headers: dict) -> httpx.Headers:
+        headers = httpx.Headers(headers=headers)
+        if self.http_client.headers.get(
+                'User-Agent', self.HTTPX_USER_AGENT) != self.HTTPX_USER_AGENT:
+            headers.pop('User-Agent', None)
+        return headers
 
     def update_cf_token(
         self,
