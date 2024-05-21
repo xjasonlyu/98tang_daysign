@@ -191,14 +191,14 @@ def preprocess_text(text) -> str:
 def push_notification(title: str, content: str) -> None:
 
     def telegram_send_message(text: str, chat_id: str, token: str, silent: bool = False) -> None:
-        with requests.post(url=f'https://api.telegram.org/bot{token}/sendMessage',
-                           json={
-                               'chat_id': chat_id,
-                               'text': text,
-                               'disable_notification': silent,
-                               'disable_web_page_preview': True,
-                           }) as r:
-            r.raise_for_status()
+        r = httpx.post(url=f'https://api.telegram.org/bot{token}/sendMessage',
+                       json={
+                           'chat_id': chat_id,
+                           'text': text,
+                           'disable_notification': silent,
+                           'disable_web_page_preview': True,
+                       })
+        r.raise_for_status()
 
     try:
         from notify import telegram_bot
