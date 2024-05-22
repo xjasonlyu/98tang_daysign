@@ -1,14 +1,28 @@
 import http
 import httpx
 import logging
-import typing
+import time
 import uuid
 import urllib.parse
-from contextlib import contextmanager
 
 
 class FlareSolverrError(httpx.RequestError):
     pass
+
+
+class FlareSolverrResponse(httpx.Response):
+
+    def __enter__(self):
+        self.read()
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    @classmethod
+    def from_httpx_resp(cls, resp: httpx.Response):
+        resp.__class__ = FlareSolverrResponse
+        return resp
 
 
 class FlareSolverr:
@@ -38,7 +52,7 @@ class FlareSolverr:
         url: str,
         cookies: dict = {},
         **kwargs,
-    ) -> httpx.Response:
+    ) -> FlareSolverrResponse:
         return self.request(method='GET', url=url, cookies=cookies, **kwargs)
 
     def post(
@@ -47,10 +61,9 @@ class FlareSolverr:
         cookies: dict = {},
         data: dict = {},
         **kwargs,
-    ) -> httpx.Response:
+    ) -> FlareSolverrResponse:
         return self.request(method='POST', url=url, cookies=cookies, data=data, **kwargs)
 
-    @contextmanager
     def request(
         self,
         method: str,
@@ -59,7 +72,7 @@ class FlareSolverr:
         cookies: dict = {},
         data: dict = {},
         **kwargs,
-    ) -> typing.Iterator[httpx.Response]:
+    ) -> FlareSolverrResponse:
         payload = {
             'cmd': f'request.{method.lower()}',
             'url': url,
@@ -74,22 +87,20 @@ class FlareSolverr:
             payload['postData'] = urllib.parse.urlencode(data)
         # make POST request
         with self.http_client.stream(method='POST', url=self.url, json=payload) as r:
-            r.raise_for_status().read()
-            if (data := r.json()) and (solution := data.get('solution')) is None:
+            if r.read() and (data := r.json()) and (solution := data.get('solution')) is None:
                 raise FlareSolverrError(
                     data.get('error') or data.get('message'))
 
-        # build a fake response
-        resp = httpx.Response(
-            status_code=solution['status'],
-            headers=solution['headers'],
-            json=solution['response'],
-            request=httpx.Request(
-                method=method.upper(),
-                url=solution['url'],
-            ),
-        )
-        try:
+            # build a fake response
+            resp = FlareSolverrResponse(
+                status_code=solution['status'],
+                headers=solution['headers'],
+                json=solution['response'],
+                request=httpx.Request(
+                    method=method.upper(),
+                    url=solution['url'],
+                ),
+            )
             resp.headers['User-Agent'] = solution['userAgent']
             for cookie in solution['cookies']:
                 resp.cookies.set(
@@ -97,9 +108,7 @@ class FlareSolverr:
                     value=cookie['value'],
                     domain=cookie['domain'],
                 )
-            yield resp
-        finally:
-            resp.close()
+            return resp
 
 
 class FlareSolverrHTTPClient:
@@ -168,7 +177,8 @@ class FlareSolverrHTTPClient:
                     return
             except FlareSolverrError as e:
                 logging.warning(
-                    f'Retry cf_clearance update caused by error: {e}')
+                    f'Retry cf_clearance update after 10 seconds caused by error: {e}')
+                time.sleep(10)  # wait for 10 seconds
                 self.fs.update_session_id()  # force session id reset
                 logging.info(
                     f'Reset flaresolverr session id to: {self.fs.session_id}')
@@ -181,26 +191,24 @@ class FlareSolverrHTTPClient:
         self,
         url: str,
         **kwargs,
-    ) -> httpx.Response:
+    ) -> FlareSolverrResponse:
         return self.request(method='GET', url=url, **kwargs)
 
     def post(
         self,
         url: str,
         **kwargs,
-    ) -> httpx.Response:
+    ) -> FlareSolverrResponse:
         return self.request(method='POST', url=url, **kwargs)
 
     def request(
         self,
         url: str,
         **kwargs,
-    ) -> httpx.Response:
+    ) -> FlareSolverrResponse:
         with self.stream(url=url, **kwargs) as r:
-            r.read()
             return r
 
-    @contextmanager
     def stream(
         self,
         method: str,
@@ -208,7 +216,7 @@ class FlareSolverrHTTPClient:
         *,
         headers: dict = {},
         **kwargs,
-    ) -> typing.Iterator[httpx.Response]:
+    ) -> FlareSolverrResponse:
 
         retries = 3
         while retries > 0:
@@ -220,8 +228,7 @@ class FlareSolverrHTTPClient:
                 **kwargs)
 
             if not self.require_challenge(r):
-                yield r
-                return
+                return FlareSolverrResponse.from_httpx_resp(r)
 
             logging.info(f'Challenge detected with URL: {url}')
             self.update_cf_token(url=url)
