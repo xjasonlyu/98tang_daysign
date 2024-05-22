@@ -121,19 +121,29 @@ def daysign(
             print(f'comment to: tid = {tid}, message = {message}')
 
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign') as r:
-            id_hash_rsl = re.findall(
-                r"updatesecqaa\('(.*?)'", r.text, re.MULTILINE | re.IGNORECASE)
-            id_hash = id_hash_rsl[0] if id_hash_rsl else 'qS0'  # default value
+            # id_hash_rsl = re.findall(
+            #     r"updatesecqaa\('(.*?)'", r.text, re.MULTILINE | re.IGNORECASE)
+            # id_hash = id_hash_rsl[0] if id_hash_rsl else 'qS0'  # default value
 
-            soup = BeautifulSoup(r.text, 'html.parser')
-            formhash = soup.find('input', {'name': 'formhash'})['value']
+            # soup = BeautifulSoup(r.text, 'html.parser')
+            # formhash = soup.find('input', {'name': 'formhash'})['value']
             # signtoken = soup.find('input', {'name': 'signtoken'})['value']
             # action = soup.find('form', {'name': 'login'})['action']
+            pass
 
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&ac=sign&infloat=yes&handlekey=pc_click_ddsign&inajax=1&ajaxtarget=fwin_content_pc_click_ddsign') as r:
             soup = BeautifulSoup(r.text, 'xml')
-            root = BeautifulSoup(soup.find('root').string, 'html.parser')
+            html = soup.find('root').string
+            # extract argument values from signform
+            root = BeautifulSoup(html, 'html.parser')
+            id_hash = (root.find('span', id=re.compile(r'^secqaa_'))
+                       ['id']).removeprefix('secqaa_')
+            formhash = root.find('input', {'name': 'formhash'})['value']
+            signtoken = root.find('input', {'name': 'signtoken'})['value']
             action = root.find('form', {'name': 'login'})['action']
+            print(
+                f'signform values: id_hash={id_hash}, formhash={formhash}, signtoken={signtoken}')
+            print(f'action href: {action}')
 
         # GET: https://www.sehuatang.net/misc.php?mod=secqaa&action=update&idhash=qS0&0.2010053552105764
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/misc.php?mod=secqaa&action=update&idhash={id_hash}&{round(random.random(), 16)}') as r:
@@ -150,7 +160,7 @@ def daysign(
         # POST: https://www.sehuatang.net/plugin.php?id=dd_sign&mod=sign&signsubmit=yes&signhash=LMAB9&inajax=1
         with _request(method='post', url=f'https://{SEHUATANG_HOST}/{action.lstrip("/")}&inajax=1',
                       data={'formhash': formhash,
-                            'signtoken': '',
+                            'signtoken': signtoken,
                             'secqaahash': id_hash,
                             'secanswer': ans}) as r:
             return r.text
