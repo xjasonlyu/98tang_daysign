@@ -126,6 +126,7 @@ def daysign(
                           'subject': '',
                       }) as r:
             print(f'comment to: tid = {tid}, message = {message}')
+            print(r.text)
 
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign') as r:
             # id_hash_rsl = re.findall(
