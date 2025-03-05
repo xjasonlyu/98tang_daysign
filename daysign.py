@@ -14,6 +14,8 @@ DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKi
 
 FID = 103  # 高清中文字幕
 
+REPLY_TIMES = os.getenv('REPLY_TIMES_98TANG', 1)
+
 AUTO_REPLIES = (
     '感谢楼主分享好片',
     '感谢分享！！',
@@ -51,7 +53,11 @@ AUTO_REPLIES = (
     '这个眼神谁顶得住。',
     '妙不可言',
     '看硬了，确实不错。',
-
+    '等这一部等了好久了！',
+    '终于来了，等了好久了。',
+    '这一部确实不错',
+    '感谢分享这一部资源',
+    '剧情还是挺OK的。',
 )
 
 
@@ -107,26 +113,32 @@ def daysign(
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/forum.php?mod=forumdisplay&fid={FID}') as r:
             tids = re.findall(r"normalthread_(\d+)", r.text,
                               re.MULTILINE | re.IGNORECASE)
+
+        # Post comments to forums
+        for _ in range(int(REPLY_TIMES)):
+
             tid = random.choice(tids)
             print(f'choose tid = {tid} to comment')
 
-        with _request(method='get', url=f'https://{SEHUATANG_HOST}/forum.php?mod=viewthread&tid={tid}&extra=page%3D1') as r:
-            soup = BeautifulSoup(r.text, 'html.parser')
-            formhash = soup.find('input', {'name': 'formhash'})['value']
+            with _request(method='get', url=f'https://{SEHUATANG_HOST}/forum.php?mod=viewthread&tid={tid}&extra=page%3D1') as r:
+                soup = BeautifulSoup(r.text, 'html.parser')
+                formhash = soup.find('input', {'name': 'formhash'})['value']
 
-        message = random.choice(AUTO_REPLIES)
+            message = random.choice(AUTO_REPLIES)
 
-        with _request(method='post', url=f'https://{SEHUATANG_HOST}/forum.php?mod=post&action=reply&fid={FID}&tid={tid}&extra=page%3D1&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1',
-                      data={
-                          'file': '',
-                          'message': message,
-                          'posttime': int(time.time()),
-                          'formhash': formhash,
-                          'usesig': '',
-                          'subject': '',
-                      }) as r:
-            print(f'comment to: tid = {tid}, message = {message}')
-            print(r.text)
+            with _request(method='post', url=f'https://{SEHUATANG_HOST}/forum.php?mod=post&action=reply&fid={FID}&tid={tid}&extra=page%3D1&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1',
+                          data={
+                              'file': '',
+                              'message': message,
+                              'posttime': int(time.time()),
+                              'formhash': formhash,
+                              'usesig': '',
+                              'subject': '',
+                          }) as r:
+                print(f'comment to: tid = {tid}, message = {message}')
+                print(r.text)
+
+            time.sleep(random.randint(16, 20))
 
         with _request(method='get', url=f'https://{SEHUATANG_HOST}/plugin.php?id=dd_sign&mod=sign') as r:
             # id_hash_rsl = re.findall(
